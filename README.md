@@ -4,7 +4,7 @@
 
 Rasma is an EDN-inspired language for describing GTK interfaces using a concise, expressive syntax. It aims to provide a developer-friendly alternative to writing GtkBuilder XML directly, while retaining compatibility with the GTK ecosystem.
 
-Rasma source files (`.rst`) are intended to be compiled into standard GtkBuilder `.ui` XML files.
+Rasma source files (`.rsm`) are intended to be compiled into standard GtkBuilder `.ui` XML files.
 
 ## Goals
 
