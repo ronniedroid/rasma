@@ -1,1 +1,27 @@
-/target
+# Clojure CLI
+.cpcache/
+.lsp/
+.nrepl-port
+
+# Clojure tooling
+.clj-kondo/.cache/
+
+# Compiled output
+target/
+classes/
+
+# Java
+*.class
+hs_err_pid*
+
+# IDE and editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
