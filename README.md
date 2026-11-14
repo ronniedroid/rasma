@@ -4,7 +4,7 @@
 
 Rasma is an EDN-inspired language for describing GTK interfaces using a concise, expressive syntax. It aims to provide a developer-friendly alternative to writing GtkBuilder XML directly, while retaining compatibility with the GTK ecosystem.
 
-Rasma source files (`.rsm`) are intended to be compiled into standard GtkBuilder `.ui` XML files.
+Rasma source files (`.rsm`) are compiled into standard GtkBuilder `.ui` XML files.
 
 ## Goals
 
@@ -12,46 +12,62 @@ Rasma aims to provide:
 
 - **Readable syntax:** Describe GTK interfaces using a structured, Lisp-inspired syntax.
 - **GtkBuilder compatibility:** Generate standard GtkBuilder XML that works with existing GTK applications.
-- **API validation:** Validate GTK, GLib, GObject, and libadwaita types, properties, signals, and relationships.
-- **Useful diagnostics:** Provide clear errors with source locations.
+- **API validation:** Validate GTK, GLib, GObject and libadwaita types, properties, signals and child relationships.
+- **Useful diagnostics:** Provide clear, source-aware errors.
 - **Build integration:** Support integration with Meson and existing GTK development workflows.
-- **Developer tooling:** Eventually provide formatting, import capabilities, and a graphical editor.
+- **Developer tooling:** Eventually provide formatting, import capabilities and graphical editor tooling.
 
 ## Example
-
-The following illustrates the intended Rasma syntax:
 
 ```clojure
 (using Gtk 4.0)
 (using Adw 1)
 
-(template MyWindow :extends Adw.ApplicationWindow
+(callback window_close_request)
+
+(template MainWindow
+  :extends Adw.ApplicationWindow
+
   :title "Hello, Rasma!"
   :default-width 600
 
-  (Adw.HeaderBar)
+  (Adw.ToolbarView
+    (:top
+      (Adw.HeaderBar))
 
-  :content
-    (Gtk.Box
-      :orientation vertical
+    :content
+      (Gtk.Box
+        :orientation vertical
+        :spacing 12
 
-      (Gtk.Label
-        :label "Hello, Rasma!")))
+        (Gtk.Label
+          :label "Hello, Rasma!")))
+
+  (on close-request window_close_request))
 ```
 
-*This is a design example. The complete parser and compiler are still under development.*
+Rasma distinguishes between GObject properties, direct child objects and named child relationships. These correspond to different GtkBuilder concepts and are represented explicitly in the language.
 
 ## Design
 
 Rasma takes inspiration from EDN and Clojure's data-oriented approach to syntax, but it is designed specifically for GTK interface descriptions rather than general-purpose programming.
 
+The language provides:
+
+- Lists for language forms and GTK objects.
+- Vectors for ordered collections.
+- Maps for future language features (accepted by the reader but not yet supported by the analyzer).
+- Keywords for properties and other named options.
+- Symbols for type names, identifiers and enum values.
+- Explicit forms for templates, callbacks, custom types, signals, bindings, property mutations and translation.
+
 Its intended compilation pipeline is:
 
 ```text
-.rst source
+.rsm source
     |
     v
-Reader / Parser
+Reader
     |
     v
 Abstract Syntax Tree
@@ -66,13 +82,15 @@ GtkBuilder XML Emitter
 .ui output
 ```
 
-GTK API metadata, primarily sourced from GObject Introspection (GIR), will eventually allow Rasma to validate interface definitions against the actual GTK ecosystem.
+The reader preserves source locations in the AST. This allows later compiler stages to report errors against the original source.
+
+GObject Introspection (GIR) metadata will eventually allow Rasma to validate GTK, GLib, GObject and libadwaita APIs.
 
 ## Implementation
 
 Rasma is written in **Clojure**, running on the JVM.
 
-The project is structured around a reusable compiler library and a command-line interface. Keeping the compiler independent of a graphical application will allow other tools and build systems to integrate with it.
+The project is intended to provide a reusable compiler library alongside a command-line interface. Keeping the compiler independent of a graphical application will allow other tools and build systems to integrate with it.
 
 ## Development
 
@@ -86,7 +104,7 @@ The project is structured around a reusable compiler library and a command-line 
 Clone the repository:
 
 ```bash
-git clone https://github.com/ronniedroid/rasma
+git clone https://github.com/ronniedroid/rasma.git
 cd rasma
 ```
 
@@ -104,29 +122,39 @@ clojure -M:test
 
 ## Project status
 
-<mark>Early development</mark>
+**Early development**
 
-Rasma is actively being developed. The initial reader implementation currently supports:
+The initial source reader is taking shape. Current functionality includes:
 
 - Reader state and source-position tracking.
+- Unicode-aware column tracking.
 - Whitespace and comment handling.
-- Token extraction.
-- Classification of symbols, keywords, integers, floating-point numbers, booleans, and nil.
-- AST node creation with source spans.
+- Token extraction and classification.
+- Strings and supported escape sequences.
+- Lists, vectors and maps.
+- Signed 64-bit integer validation.
+- Floating-point overflow and underflow validation.
+- Detection of unsupported syntax.
+- Structured reader errors with source spans.
+- Human-readable diagnostic rendering with source excerpts.
 
-The complete parser, semantic analysis, validation, and XML generation stages have not yet been implemented.
+The AST and reader provide the foundation for the next stages of the compiler.
+
+Semantic analysis, GIR-based validation and GtkBuilder XML generation are still under development.
 
 ## Roadmap
 
 - [x] Establish the Clojure project structure.
-- [x] Implement initial reader state and token handling.
 - [x] Introduce AST nodes and source spans.
-- [ ] Implement string literals and escape sequences.
-- [ ] Implement collection parsing.
-- [ ] Complete the source-aware reader and parser.
+- [x] Implement reader state and token handling.
+- [x] Implement strings and escape sequences.
+- [x] Implement list, vector and map reading.
+- [x] Implement lexical validation and numeric range checks.
+- [x] Introduce structured errors.
+- [x] Implement human-readable diagnostic rendering.
 - [ ] Implement semantic analysis and validation.
+- [ ] Validate GTK APIs using GIR metadata.
 - [ ] Generate GtkBuilder XML.
-- [ ] Add GIR-based GTK API validation.
 - [ ] Integrate with Meson.
 - [ ] Implement formatting and `.ui` import.
 - [ ] Explore graphical editor tooling.
